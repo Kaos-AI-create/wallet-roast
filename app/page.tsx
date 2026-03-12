@@ -62,9 +62,10 @@ export default function RoastPage() {
       setRoast(data.roast);
       setHistory(prev => [data.roast, ...prev].slice(0, 3));
       setStatus('IDLE');
-    } catch (e) {
+    } catch (error) { 
       clearInterval(loadInterval);
       setStatus('IDLE');
+      console.error("Roast failed:", error);
     }
   };
 
@@ -73,7 +74,7 @@ export default function RoastPage() {
   return (
     <main style={{ backgroundColor: '#000', color: '#22c55e', minHeight: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', fontFamily: 'monospace' }}>
       
-      {/* Wallet added as floating absolute component to avoid disrupting main flow */}
+      {/* Wallet added as floating absolute component */}
       <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
         <Wallet>
           <ConnectWallet className="bg-black border border-green-500 text-green-500" />
@@ -119,13 +120,20 @@ export default function RoastPage() {
 
         {history.length > 0 && (
           <div style={{ marginTop: '30px' }}>
-            <p style={{ fontSize: '8px', opacity: 0.5, marginBottom: '10px', letterSpacing: '0.2em' }}>// PREVIOUS_LOGS</p>
+            <button 
+              onClick={() => console.log("History clicked")}
+              style={{ fontSize: '8px', opacity: 0.5, marginBottom: '10px', letterSpacing: '0.2em', background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0 }}
+            >
+              [PREVIOUS_LOGS]
+            </button>
+            
             {history.map((h, i) => (
-              <div key={i} style={{ fontSize: '10px', padding: '10px', borderLeft: '2px solid #22c55e', marginBottom: '10px', background: '#0a0a0a' }}>{h.substring(0, 60)}...</div>
+              <div key={i} style={{ fontSize: '10px', padding: '10px', borderLeft: '2px solid #22c55e', marginBottom: '10px', background: '#0a0a0a' }}>
+                {h.substring(0, 60)}...
+              </div>
             ))}
           </div>
         )}
-        <footer style={{ marginTop: '40px', fontSize: '9px', opacity: 0.3, textAlign: 'center' }}>DECENTRALIZED_KAOS_ENGINE // VER_1.0.4</footer>
       </div>
     </main>
   );

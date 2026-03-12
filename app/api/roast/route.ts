@@ -28,7 +28,9 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ roast: completion.choices[0]?.message?.content });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    // We check if it is an instance of Error to access the .message property safely
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

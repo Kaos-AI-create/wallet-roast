@@ -1,5 +1,6 @@
-import "@coinbase/onchainkit/styles.css";
-import { Providers } from "./providers";
+import "@coinbase/onchainkit/styles.css"; // Styles first
+import "./globals.css";                   // Then your custom CSS
+import { Providers } from "./providers";   // Then your provider wrapper
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
