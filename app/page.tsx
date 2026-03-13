@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAccount } from "wagmi";
 import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from "@coinbase/onchainkit/wallet";
 import { Address, Avatar, Name, Identity } from "@coinbase/onchainkit/identity";
 
@@ -15,9 +16,18 @@ export default function RoastPage() {
   const [cooldown, setCooldown] = useState(0);
   const [loadingStateIndex, setLoadingStateIndex] = useState(0);
 
+  const { address: connectedAddress } = useAccount();
+
   const loadingStates = ["SYSTEM_INITIALIZING...", "IGNITING_ROTISSERIE...", "PROBING_BLOCKCHAIN_DATA...", "CALCULATING_DEGEN_LEVEL..."];
 
   useEffect(() => { setHasMounted(true); }, []);
+
+  // Wallet auto-fill/override logic
+  useEffect(() => {
+    if (connectedAddress) {
+      setAddress(connectedAddress);
+    }
+  }, [connectedAddress]);
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -39,7 +49,6 @@ export default function RoastPage() {
 
   const handleRoast = async () => {
     if (status !== 'IDLE' || cooldown > 0) return;
-    
     const isEth = address.endsWith(".eth");
     const isHex = /^0x[a-fA-F0-9]{40}$/.test(address);
     if (!isEth && !isHex) return alert("INVALID_INPUT");
@@ -73,8 +82,6 @@ export default function RoastPage() {
 
   return (
     <main style={{ backgroundColor: '#000', color: '#22c55e', minHeight: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', fontFamily: 'monospace' }}>
-      
-      {/* Wallet added as floating absolute component */}
       <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
         <Wallet>
           <ConnectWallet className="bg-black border border-green-500 text-green-500" />
@@ -90,11 +97,8 @@ export default function RoastPage() {
       <div style={{ width: '100%', maxWidth: '600px' }}>
         <p style={{ fontSize: '10px', letterSpacing: '0.3em', marginBottom: '20px', opacity: 0.5, textAlign: 'center' }}>PROPERTY_OF_KAOS_SYSTEMS</p>
 
-        <div style={{ border: '2px solid #22c55e', padding: '30px', background: '#000', position: 'relative' }}>
-          {status === 'LOADING' && <motion.div initial={{ width: "0%" }} animate={{ width: "100%" }} transition={{ duration: 3, repeat: Infinity }} style={{ position: 'absolute', top: 0, left: 0, height: '2px', background: '#22c55e' }} />}
-
+        <div style={{ border: '2px solid #22c55e', padding: '30px', background: '#000' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '30px', letterSpacing: '0.2em', textAlign: 'center' }}>{">>"} WALLET_ROAST</h1>
-          
           <input
             disabled={status === 'LOADING'}
             style={{ width: '100%', background: '#000', border: '2px solid #22c55e', padding: '15px', color: '#22c55e', marginBottom: '20px', textAlign: 'center', fontSize: '16px' }}
@@ -102,7 +106,6 @@ export default function RoastPage() {
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
-          
           <button 
             disabled={status === 'LOADING' || cooldown > 0}
             onClick={handleRoast} 
@@ -110,7 +113,6 @@ export default function RoastPage() {
           >
             {status === 'LOADING' ? loadingStates[loadingStateIndex] : cooldown > 0 ? `COOLDOWN: ${cooldown}s` : "EXECUTE_ROAST"}
           </button>
-
           {roast && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '30px', textAlign: 'left', borderTop: '1px solid #22c55e', paddingTop: '20px' }}>
               <p style={{ fontSize: '14px', lineHeight: '1.6' }}>{displayedRoast}</p>
@@ -118,15 +120,14 @@ export default function RoastPage() {
           )}
         </div>
 
+        {/* KAOS Footer */}
+        <div style={{ textAlign: 'center', marginTop: '20px', opacity: 0.5 }}>
+          <p style={{ fontSize: '10px', letterSpacing: '0.2em' }}>DECENTRALIZED_ENGINE_OF_KAOS // v1.0.4-BETA</p>
+        </div>
+
         {history.length > 0 && (
           <div style={{ marginTop: '30px' }}>
-            <button 
-              onClick={() => console.log("History clicked")}
-              style={{ fontSize: '8px', opacity: 0.5, marginBottom: '10px', letterSpacing: '0.2em', background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0 }}
-            >
-              [PREVIOUS_LOGS]
-            </button>
-            
+            <p style={{ fontSize: '8px', opacity: 0.5, marginBottom: '10px', letterSpacing: '0.2em' }}>[PREVIOUS_LOGS]</p>
             {history.map((h, i) => (
               <div key={i} style={{ fontSize: '10px', padding: '10px', borderLeft: '2px solid #22c55e', marginBottom: '10px', background: '#0a0a0a' }}>
                 {h.substring(0, 60)}...
