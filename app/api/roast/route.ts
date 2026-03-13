@@ -5,7 +5,13 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { address } = await req.json();
+    const { address, lastPersona } = await req.json();
+
+    const isEth = address.endsWith(".eth");
+    const isHex = /^0x[a-fA-F0-9]{40}$/.test(address);
+    if (!isEth && !isHex) {
+      return NextResponse.json({ error: 'INVALID_ADDRESS' }, { status: 400 });
+    }
 
     const personas = [
       "a cynical 90s cyberpunk hacker who hates everything",
@@ -15,22 +21,42 @@ export async function POST(req: Request) {
       "a cold, clinical AI auditor that lists your financial sins like a court transcript"
     ];
 
-    const selectedPersona = personas[Math.floor(Math.random() * personas.length)];
+    const available = personas.filter(p => p !== lastPersona);
+    const selectedPersona = available[Math.floor(Math.random() * available.length)];
 
-    const completion = await groq.chat.completions.create({
+    const stream = await groq.chat.completions.create({
       messages: [{ 
         role: "user", 
-        content: `You are ${selectedPersona}. Roast this wallet address: ${address}. 
-        Keep it under 150 words. Do not be repetitive.` 
+        content: `You are ${selectedPersona}. Roast this wallet address: ${address}. Keep it under 150 words. Do not be repetitive. Be creative.` 
       }],
-      model: "llama-3.3-70b-versatile",
-      temperature: 1.0, 
+      model: "llama-3.3-8b-instant",
+      temperature: 0.9,
+      stream: true,
     });
 
-    return NextResponse.json({ roast: completion.choices[0]?.message?.content });
-  } catch (error: unknown) {
-    // We check if it is an instance of Error to access the .message property safely
-    const message = error instanceof Error ? error.message : 'An unknown error occurred';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const encoder = new TextEncoder();
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            controller.enqueue(encoder.encode(content));
+          }
+        } catch (err) {
+          console.error("Stream error:", err);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: { 
+        'Content-Type': 'text/plain', 
+        'X-Persona': encodeURIComponent(selectedPersona) 
+      }
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'FAILED_TO_ROAST' }, { status: 500 });
   }
 }
