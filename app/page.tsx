@@ -16,18 +16,20 @@ export default function RoastPage() {
   const [cooldown, setCooldown] = useState(0);
   const [loadingStateIndex, setLoadingStateIndex] = useState(0);
 
+ // Add this inside your RoastPage function, below your state definitions
   const { address: connectedAddress } = useAccount();
+  const [isClient, setIsClient] = useState(false);
 
-  const loadingStates = ["SYSTEM_INITIALIZING...", "IGNITING_ROTISSERIE...", "PROBING_BLOCKCHAIN_DATA...", "CALCULATING_DEGEN_LEVEL..."];
-
-  useEffect(() => { setHasMounted(true); }, []);
-
-  // Wallet auto-fill/override logic
   useEffect(() => {
-    if (connectedAddress) {
+    setIsClient(true);
+  }, []);
+
+  // Update the auto-fill logic to use isClient
+  useEffect(() => {
+    if (isClient && connectedAddress) {
       setAddress(connectedAddress);
     }
-  }, [connectedAddress]);
+  }, [connectedAddress, isClient]);
 
   useEffect(() => {
     if (cooldown > 0) {
