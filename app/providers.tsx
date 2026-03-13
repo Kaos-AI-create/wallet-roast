@@ -20,8 +20,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  if (!mounted) return <>{children}</>;
+  // During the build/server-side rendering, 'mounted' is false.
+  // We return the children directly, skipping all Providers.
+  // This prevents the WagmiProvider crash.
+  if (!mounted) {
+    return <>{children}</>;
+  }
 
+  // Once mounted in the browser, the providers are safely initialized.
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
