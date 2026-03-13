@@ -7,7 +7,7 @@ import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from 
 import { Address, Avatar, Name, Identity } from "@coinbase/onchainkit/identity";
 
 export default function RoastPage() {
-  const [hasMounted, setHasMounted] = useState(false);
+  const [hasMounted, _setHasMounted] = useState(false);
   const [address, setAddress] = useState("");
   const [roast, setRoast] = useState("");
   const [displayedRoast, setDisplayedRoast] = useState("");
