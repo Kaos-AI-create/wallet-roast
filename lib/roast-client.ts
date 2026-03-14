@@ -1,5 +1,3 @@
-// lib/roast-client.ts
-
 export const fetchRoastStream = async (
   address: string,
   lastPersona: string,
@@ -25,6 +23,8 @@ export const fetchRoastStream = async (
       if (Date.now() - lastDataTime > 5000) { // 5-second stall threshold
         clearInterval(stallWatcher);
         onError("SYSTEM_STALL_DETECTED");
+        // We do not close the reader here to avoid complex state; 
+        // the error message will inform the user.
       }
     }, 1000);
 

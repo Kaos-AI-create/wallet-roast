@@ -39,7 +39,11 @@ export default function RoastPage() {
       () => setIsRoasting(false),
       (err: any) => {
         console.error("Stream Error:", err);
-        setDisplayedRoast((prev) => prev + "\n\n[SYSTEM_ERROR: CONNECTION_REJECTED]");
+        setDisplayedRoast((prev) => 
+          prev + (err === "SYSTEM_STALL_DETECTED" 
+            ? "\n\n[ERR: CONNECTION_STALLED_RETRY_REQUIRED]" 
+            : "\n\n[SYSTEM_ERROR: CONNECTION_REJECTED]")
+        );
         setIsRoasting(false);
       }
     );
@@ -49,7 +53,6 @@ export default function RoastPage() {
 
   return (
     <main style={{ backgroundColor: '#000', color: '#22c55e', minHeight: '100dvh', padding: '20px', fontFamily: 'monospace' }}>
-      {/* Mounted-only Wallet wrapper to stop Hydration setState collision */}
       <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
         {isMounted && (
           <Wallet>
