@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
+import { getPersona } from '@/lib/personas';
 
 const groq = new Groq({ 
   apiKey: process.env.GROQ_API_KEY 
@@ -9,26 +10,18 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { address, lastPersona } = body;
-
+console.log("DEBUG_DATA:", { address, lastPersona });
     if (!address) {
       return NextResponse.json({ error: 'INVALID_ADDRESS' }, { status: 400 });
     }
 
-    const personas = [
-      "a cynical 90s cyberpunk hacker who hates everything",
-      "a pompous, elitist Wall Street trader looking down on your portfolio",
-      "a disappointed, grandmotherly figure who just wants you to do better",
-      "an unhinged degen who speaks entirely in meme-slang and crypto-jargon",
-      "a cold, clinical AI auditor that lists your financial sins like a court transcript"
-    ];
+    // Mixer Engine: Selects a persona using the modular lib
+    const selected = getPersona(lastPersona);
 
-    const selectedPersona = personas[Math.floor(Math.random() * personas.length)];
-
-    // Using a guaranteed-available model
     const stream = await groq.chat.completions.create({
       messages: [{ 
         role: "user", 
-        content: `You are ${selectedPersona}. Roast this wallet address: ${address}. Keep it under 150 words.` 
+        content: `You are ${selected.prompt}. Roast this wallet address: ${address}. Keep it under 150 words.` 
       }],
       model: "llama-3.3-70b-versatile",
       stream: true,
@@ -53,7 +46,7 @@ export async function POST(req: Request) {
     return new Response(readableStream, {
       headers: { 
         'Content-Type': 'text/plain', 
-        'X-Persona': encodeURIComponent(selectedPersona) 
+        'X-Persona': encodeURIComponent(selected.prompt) 
       }
     });
   } catch (error) {
