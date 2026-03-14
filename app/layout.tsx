@@ -1,12 +1,13 @@
-import "@coinbase/onchainkit/styles.css"; // Styles first
-import "./globals.css";                   // Then your custom CSS
-import { Providers } from "./providers";   // Then your provider wrapper
+import './globals.css';
+import { Providers } from './providers';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        <Providers>{children}</Providers>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning={true} style={{ margin: 0, padding: 0 }}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

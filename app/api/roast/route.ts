@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({ 
+  apiKey: process.env.GROQ_API_KEY 
+});
 
 export async function POST(req: Request) {
   try {
-    const { address, lastPersona } = await req.json();
+    const body = await req.json();
+    const { address, lastPersona } = body;
 
-    const isEth = address.endsWith(".eth");
-    const isHex = /^0x[a-fA-F0-9]{40}$/.test(address);
-    if (!isEth && !isHex) {
+    if (!address) {
       return NextResponse.json({ error: 'INVALID_ADDRESS' }, { status: 400 });
     }
 
@@ -21,16 +22,15 @@ export async function POST(req: Request) {
       "a cold, clinical AI auditor that lists your financial sins like a court transcript"
     ];
 
-    const available = personas.filter(p => p !== lastPersona);
-    const selectedPersona = available[Math.floor(Math.random() * available.length)];
+    const selectedPersona = personas[Math.floor(Math.random() * personas.length)];
 
+    // Using a guaranteed-available model
     const stream = await groq.chat.completions.create({
       messages: [{ 
         role: "user", 
-        content: `You are ${selectedPersona}. Roast this wallet address: ${address}. Keep it under 150 words. Do not be repetitive. Be creative.` 
+        content: `You are ${selectedPersona}. Roast this wallet address: ${address}. Keep it under 150 words.` 
       }],
-      model: "llama-3.3-8b-instant",
-      temperature: 0.9,
+      model: "llama-3.3-70b-versatile",
       stream: true,
     });
 
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
             controller.enqueue(encoder.encode(content));
           }
         } catch (err) {
-          console.error("Stream error:", err);
+          console.error("STREAM_CHUNK_ERROR:", err);
         } finally {
           controller.close();
         }
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
       }
     });
   } catch (error) {
+    console.error("API_FATAL_ERROR:", error);
     return NextResponse.json({ error: 'FAILED_TO_ROAST' }, { status: 500 });
   }
 }
