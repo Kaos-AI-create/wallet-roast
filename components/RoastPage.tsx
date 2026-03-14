@@ -5,9 +5,11 @@ import { useAccount } from "wagmi";
 import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from "@coinbase/onchainkit/wallet";
 import { Address, Avatar, Name, Identity } from "@coinbase/onchainkit/identity";
 import { fetchRoastStream } from "../lib/roast-client";
+import { BootSequence } from "./BootSequence";
 
 export default function RoastPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const [hasBooted, setHasBooted] = useState(false);
   const [address, setAddress] = useState("");
   const [displayedRoast, setDisplayedRoast] = useState("");
   const [isRoasting, setIsRoasting] = useState(false);
@@ -49,20 +51,25 @@ export default function RoastPage() {
     );
   };
 
+  // 1. Hydration guard
   if (!isMounted) return null;
 
+  // 2. Boot sequence control
+  if (!hasBooted) {
+    return <BootSequence onComplete={() => setHasBooted(true)} />;
+  }
+
+  // 3. Main Application
   return (
     <main style={{ backgroundColor: '#000', color: '#22c55e', minHeight: '100dvh', padding: '20px', fontFamily: 'monospace' }}>
       <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
-        {isMounted && (
-          <Wallet>
-            <ConnectWallet className="bg-black border border-green-500 text-green-500" />
-            <WalletDropdown>
-              <Identity hasCopyAddressOnClick><Avatar /><Name /><Address /></Identity>
-              <WalletDropdownDisconnect />
-            </WalletDropdown>
-          </Wallet>
-        )}
+        <Wallet>
+          <ConnectWallet className="bg-black border border-green-500 text-green-500" />
+          <WalletDropdown>
+            <Identity hasCopyAddressOnClick><Avatar /><Name /><Address /></Identity>
+            <WalletDropdownDisconnect />
+          </WalletDropdown>
+        </Wallet>
       </div>
 
       <div style={{ maxWidth: '600px', margin: '100px auto' }}>
