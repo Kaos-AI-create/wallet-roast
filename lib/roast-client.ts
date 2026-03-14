@@ -1,12 +1,12 @@
 // lib/roast-client.ts
 
-export async function fetchRoastStream(
+export const fetchRoastStream = async (
   address: string,
   lastPersona: string,
   onChunk: (chunk: string) => void,
-  onComplete: (persona: string) => void,
-  onError: (error: Error) => void
-) {
+  onComplete: () => void,
+  onError: (err: any) => void
+) => {
   try {
     const response = await fetch("/api/roast", {
       method: "POST",
@@ -14,22 +14,32 @@ export async function fetchRoastStream(
       body: JSON.stringify({ address, lastPersona }),
     });
 
-    if (!response.body) throw new Error("Stream connection failed.");
+    if (!response.body) throw new Error("No response body");
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     
-    // Extract metadata before the stream
-    const persona = decodeURIComponent(response.headers.get('X-Persona') || "Unknown");
+    // Heartbeat/Stall detection logic
+    let lastDataTime = Date.now();
+    const stallWatcher = setInterval(() => {
+      if (Date.now() - lastDataTime > 5000) { // 5-second stall threshold
+        clearInterval(stallWatcher);
+        onError("SYSTEM_STALL_DETECTED");
+      }
+    }, 1000);
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      onChunk(decoder.decode(value, { stream: true }));
+      
+      lastDataTime = Date.now(); // Reset heartbeat on data arrival
+      const chunk = decoder.decode(value, { stream: true });
+      onChunk(chunk);
     }
-    
-    onComplete(persona);
-  } catch (error) {
-    onError(error instanceof Error ? error : new Error("Stream interrupted"));
+
+    clearInterval(stallWatcher);
+    onComplete();
+  } catch (err) {
+    onError(err);
   }
-}
+};
