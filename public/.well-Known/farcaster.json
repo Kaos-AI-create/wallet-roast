@@ -1,0 +1,15 @@
+{
+  "accountAssociation": {
+    "header": "PASTE_YOUR_HEADER_HERE",
+    "payload": "PASTE_YOUR_PAYLOAD_HERE",
+    "signature": "PASTE_YOUR_SIGNATURE_HERE"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Wallet Roast",
+    "homeUrl": "https://your-vercel-domain.vercel.app",
+    "iconUrl": "https://your-vercel-domain.vercel.app/icon.png",
+    "splashImageUrl": "https://your-vercel-domain.vercel.app/splash.png",
+    "splashBackgroundColor": "#000000"
+  }
+}
